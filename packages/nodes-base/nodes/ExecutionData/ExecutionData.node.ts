@@ -105,8 +105,6 @@ export class ExecutionData implements INodeType {
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const nodeVersion = this.getNode().typeVersion;
-
 		const items = this.getInputData();
 		const operations = this.getNodeParameter('operation', 0);
 
@@ -120,8 +118,9 @@ export class ExecutionData implements INodeType {
 
 					const values = dataToSave.reduce(
 						(acc, { key, value }) => {
-							const valueToSet = value ? value : nodeVersion >= 1.1 ? '' : value;
-							acc[key] = valueToSet;
+							// Values are evaluated expressions and may be booleans or numbers (e.g. `false`, `0`).
+							// Only nullish values become empty strings; everything else is stored as a string.
+							acc[key] = value === undefined || value === null ? '' : String(value);
 							return acc;
 						},
 						{} as { [key: string]: string },
